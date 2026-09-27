@@ -4,44 +4,62 @@
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #1e1e1e;
+    color: #e5e7eb;
   }
 }
 
 /* Academic LaTeX typesetting font styles */
 .latex-font-serif {
-  font-family: 'Source Serif 4', 'Computer Modern Roman', 'Times New Roman', serif;
+  font-family: 'KaTeX_Main', 'Source Serif 4', 'Computer Modern', 'Times New Roman', serif;
+  text-rendering: optimizeLegibility;
 }
 
 .latex-font-mono {
   font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 
-/* Custom scrollbars for editor and sidebar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.3);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.5);
+/* Authentic PDF viewer canvas background */
+.pdf-viewer-canvas {
+  background-color: #525659;
 }
 
-/* KaTeX custom overrides for crisp rendering */
+/* Authentic LaTeX A4 Page Sheet with PDF reader drop shadow */
+.pdf-a4-sheet {
+  background-color: #ffffff;
+  color: #111827;
+  width: 794px;
+  min-height: 1123px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+/* Custom scrollbars for editor and PDF viewer */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.55);
+}
+
+/* KaTeX custom overrides for crisp LaTeX rendering */
 .katex-display {
-  margin: 1.25em 0 !important;
+  margin: 1em 0 !important;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.25rem 0;
+  padding: 0.2rem 0;
 }
 
 .katex {
-  font-size: 1.08em;
+  font-size: 1.05em;
   text-rendering: geometricPrecision;
 }
 
@@ -62,7 +80,7 @@
     display: block !important;
   }
 
-  .latex-paper {
+  .pdf-a4-sheet {
     box-shadow: none !important;
     border: none !important;
     margin: 0 !important;
@@ -78,3 +96,4 @@
     margin: 1.5cm 1.5cm;
   }
 }
+
