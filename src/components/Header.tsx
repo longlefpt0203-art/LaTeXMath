@@ -27,6 +27,8 @@ interface HeaderProps {
   activeStylesCount?: number;
   onRequestDownloadTex: () => void;
   onExportPdf: () => void;
+  onSystemPrint?: () => void;
+  isExportingPdf?: boolean;
   onImportTex: (file: File) => void;
   autoCompile: boolean;
   onToggleAutoCompile: () => void;
@@ -51,6 +53,8 @@ export const Header: React.FC<HeaderProps> = ({
   activeStylesCount,
   onRequestDownloadTex,
   onExportPdf,
+  onSystemPrint,
+  isExportingPdf,
   onImportTex,
   autoCompile,
   onToggleAutoCompile,
@@ -235,15 +239,36 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="hidden sm:inline">Tải .tex</span>
         </button>
 
-        {/* Print / Export to PDF */}
-        <button
-          onClick={onExportPdf}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-neutral-300 hover:text-white bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 rounded-md transition-colors"
-          title="In hoặc lưu dạng PDF chuẩn A4 học thuật"
-        >
-          <Printer className="w-3.5 h-3.5 text-emerald-400" />
-          <span className="hidden sm:inline">Xuất PDF</span>
-        </button>
+        {/* Print / Export to PDF Direct */}
+        <div className="flex items-center">
+          <button
+            onClick={onExportPdf}
+            disabled={isExportingPdf}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-emerald-200 hover:text-white bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-800/80 transition-colors shadow-xs ${
+              onSystemPrint ? 'rounded-l-md border-r-0' : 'rounded-md'
+            } disabled:opacity-60`}
+            title="Xuất và tải ngay file PDF (.pdf) chuẩn A4 chất lượng cao"
+          >
+            {isExportingPdf ? (
+              <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5 text-emerald-400" />
+            )}
+            <span className="hidden sm:inline">{isExportingPdf ? 'Đang tạo PDF...' : 'Xuất PDF'}</span>
+            <span className="text-[10px] bg-emerald-900 text-emerald-300 px-1 py-0.2 rounded font-mono font-semibold">
+              PDF
+            </span>
+          </button>
+          {onSystemPrint && (
+            <button
+              onClick={onSystemPrint}
+              className="p-1.5 text-emerald-300 hover:text-white bg-emerald-950/70 hover:bg-emerald-900 border border-emerald-800/80 rounded-r-md transition-colors"
+              title="Mở hộp thoại in hệ thống (Print dialog)"
+            >
+              <Printer className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
 
         {/* Auto compile toggle */}
         <button

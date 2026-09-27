@@ -8,6 +8,123 @@ export interface LatexTemplate {
 
 export const LATEX_TEMPLATES: LatexTemplate[] = [
   {
+    id: 'vietnamese-exam-ex-test',
+    name: 'Đề thi Toán Chuẩn (ex_test.sty & TikZ)',
+    description: 'Đề thi trắc nghiệm & tự luận theo chuẩn gói ex_test.sty với các câu hỏi \\begin{ex}, \\choice, \\True, \\loigiai và đồ thị TikZ trong \\begin{center}.',
+    category: 'exam',
+    code: `\\documentclass[a4paper,12pt]{article}
+\\usepackage{amsmath,amssymb}
+\\usepackage{tikz}
+\\usepackage{ex_test}
+
+\\title{ĐỀ KIỂM TRA ĐỊNH KỲ MÔN TOÁN 12}
+\\author{Trường THPT Chuyên - Tổ Toán Tin}
+\\date{Năm học 2025 - 2026}
+
+\\begin{document}
+
+\\begin{center}
+{\\bf BỘ GIÁO DỤC VÀ ĐÀO TẠO --- TRƯỜNG THPT CHUYÊN} \\\\
+{\\bf ĐỀ THI KHẢO SÁT CHẤT LƯỢNG MÔN TOÁN} \\\\
+{\\it Thời gian làm bài: 90 phút (không kể thời gian phát đề)}
+\\end{center}
+
+\\section*{PHẦN I. CÂU TRẮC NGHIỆM NHIỀU PHƯƠNG ÁN LỰA CHỌN}
+\\textit{Thí sinh trả lời từ câu 1 đến câu 3. Mỗi câu hỏi chỉ chọn một phương án.}
+
+\\begin{ex}[2D1-1]
+Nghiệm của phương trình $2^{2x-1} = 8$ là:
+\\choice
+{$x = 1$}
+{\\True $x = 2$}
+{$x = 3$}
+{$x = \\frac{3}{2}$}
+\\loigiai{
+Ta có $2^{2x-1} = 8 = 2^3 \\Leftrightarrow 2x - 1 = 3 \\Leftrightarrow 2x = 4 \\Leftrightarrow x = 2$.
+}
+\\end{ex}
+
+\\begin{ex}[2D1-2]
+Cho hàm số $y = f(x)$ có đồ thị như hình vẽ bên dưới:
+
+\\begin{center}
+\\begin{tikzpicture}[>=stealth,scale=1.0]
+  \\draw[->] (-2.5,0) -- (2.5,0) node[below]{$x$};
+  \\draw[->] (0,-1) -- (0,3) node[left]{$y$};
+  \\node[below left] at (0,0) {$O$};
+  \\draw[smooth,blue,line width=1.2pt] plot[domain=-1.7:1.7] (\\x,{(\\x)^4 - 2*(\\x)^2 + 1});
+  \\draw[dashed] (-1,0) node[below]{$-1$} -- (-1,0);
+  \\draw[dashed] (1,0) node[below]{$1$} -- (1,0);
+\\end{tikzpicture}
+\\end{center}
+
+Hàm số đã cho đồng biến trên khoảng nào dưới đây?
+\\choice
+{$(-\\infty; -1)$}
+{\\True $(-1; 0)$}
+{$(0; 1)$}
+{$(-\\infty; 0)$}
+\\loigiai{
+Quan sát đồ thị hàm số, trên khoảng $(-1; 0)$, đồ thị đi lên từ trái sang phải, suy ra hàm số đồng biến trên $(-1; 0)$.
+}
+\\end{ex}
+
+\\begin{ex}[2H1-1]
+Cho khối lăng trụ tam giác $ABC.A'B'C'$ có diện tích đáy $B = 6a^2$ và chiều cao $h = 3a$. Thể tích $V$ của khối lăng trụ đã cho bằng:
+\\choice
+{$V = 6a^3$}
+{$V = 9a^3$}
+{\\True $V = 18a^3$}
+{$V = 2a^3$}
+\\loigiai{
+Thể tích của khối lăng trụ được tính theo công thức:
+\\[
+V = B \\cdot h = 6a^2 \\cdot 3a = 18a^3.
+\\]
+}
+\\end{ex}
+
+\\newpage
+
+\\section*{PHẦN II. CÂU TRẮC NGHIỆM ĐÚNG SAI}
+\\textit{Thí sinh trả lời câu hỏi dưới đây. Trong mỗi ý a), b), c), d), chọn đúng hoặc sai.}
+
+\\begin{ex}[2D2-1]
+Cho hàm số $f(x) = x^3 - 3x + 2$. Xét tính đúng sai của các khẳng định sau:
+\\choiceTF
+{\\True Đạo hàm của hàm số là $f'(x) = 3x^2 - 3$.}
+{\\True Hàm số có hai điểm cực trị là $x = -1$ và $x = 1$.}
+{Hàm số đồng biến trên khoảng $(-1; 1)$.}
+{\\True Giá trị cực đại của hàm số bằng $4$.}
+\\loigiai{
+Ta có $f'(x) = 3x^2 - 3 = 0 \\Leftrightarrow x = \\pm 1$.
+\\begin{itemize}
+  \\item Khẳng định a đúng: $f'(x) = 3x^2 - 3$.
+  \\item Khẳng định b đúng: Hàm số có hai điểm cực trị tại $x = -1$ và $x = 1$.
+  \\item Khẳng định c sai: Trên khoảng $(-1; 1)$, $f'(x) < 0$ nên hàm số nghịch biến.
+  \\item Khẳng định d đúng: $f(-1) = (-1)^3 - 3(-1) + 2 = 4$.
+\\end{itemize}
+}
+\\end{ex}
+
+\\section*{PHẦN III. BÀI TẬP TỰ LUẬN}
+
+\\begin{bt}[2D3-1]
+\\point{2.0}
+Tính tích phân $I = \\int_{0}^{1} (2x + 1) e^x \\dx$.
+\\loigiai{
+Đặt $\\heva{u = 2x + 1 \\\\ \\diff v = e^x \\dx} \\Rightarrow \\heva{\\diff u = 2\\dx \\\\ v = e^x}$.
+Theo công thức tích phân từng phần:
+\\[
+I = \\left. (2x+1)e^x \\right|_0^1 - \\int_0^1 2e^x \\dx = (3e - 1) - 2(e - 1) = e + 1.
+\\]
+\\dapso{$I = e + 1$}
+}
+\\end{bt}
+
+\\end{document}`,
+  },
+  {
     id: 'academic-paper',
     name: 'Bài báo Nghiên cứu Khoa học',
     description: 'Bố cục bài báo chuẩn IEEE/Springer với Abstract, Phương trình giải tích, Bảng số liệu và Tài liệu tham khảo.',
@@ -451,7 +568,7 @@ Tính diện tích miền hình phẳng $(H)$ giới hạn bởi parabol $y = x^
 \\end{tikzpicture}
 \\end{center}
 
-Công thức tính diện tích hình phẳng:
+\\section{Công thức tính diện tích hình phẳng}
 \\begin{equation}
   S = \\int_{-1}^{2} \\left| (x+2) - x^2 \\right| \\, dx = \\left. \\left( \\frac{x^2}{2} + 2x - \\frac{x^3}{3} \\right) \\right|_{-1}^{2} = \\frac{9}{2}
 \\end{equation}

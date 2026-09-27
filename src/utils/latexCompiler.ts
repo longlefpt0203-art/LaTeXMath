@@ -12,6 +12,7 @@ export interface CompilationLog {
 
 export interface CompilerResult {
   html: string;
+  pages: string[];
   status: 'success' | 'warning' | 'error';
   logs: CompilationLog[];
   metrics: {
@@ -23,6 +24,7 @@ export interface CompilerResult {
     sectionCount: number;
     activePackagesCount: number;
     tikzCount: number;
+    exCount: number;
   };
   metadata: {
     title: string;
@@ -41,15 +43,36 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
   let equationCount = 0;
   let sectionCount = 0;
   let tikzCount = 0;
+  let exCount = 0;
 
-  // Custom KaTeX macros storage
+  // Custom KaTeX macros storage with standard math & Vietnamese exam shortcuts
   const macros: Record<string, string> = {
     '\\R': '\\mathbb{R}',
     '\\N': '\\mathbb{N}',
     '\\Z': '\\mathbb{Z}',
     '\\C': '\\mathbb{C}',
     '\\Q': '\\mathbb{Q}',
+    '\\RR': '\\mathbb{R}',
+    '\\NN': '\\mathbb{N}',
+    '\\ZZ': '\\mathbb{Z}',
+    '\\CC': '\\mathbb{C}',
+    '\\QQ': '\\mathbb{Q}',
     '\\eps': '\\varepsilon',
+    '\\degree': '^\\circ',
+    '\\vect': '\\vec{#1}',
+    '\\diff': '\\mathrm{d}',
+    '\\d': '\\mathrm{d}',
+    '\\e': '\\mathrm{e}',
+    '\\imagi': '\\mathrm{i}',
+    '\\dx': '\\,\\mathrm{d}x',
+    '\\dt': '\\,\\mathrm{d}t',
+    '\\du': '\\,\\mathrm{d}u',
+    '\\heva': '\\left\\{\\begin{aligned}#1\\end{aligned}\\right\\}',
+    '\\hoac': '\\left[\\begin{aligned}#1\\end{aligned}\\right\\}',
+    '\\parallel': '\\mathrel{/\\!/}',
+    '\\perp': '\\bot',
+    '\\True': '\\mathbf{\\checkmark}',
+    '\\False': '\\mathbf{\\times}',
   };
 
   // Extract \usepackage declarations in code
@@ -84,7 +107,8 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
   const standardPackages = new Set([
     'amsmath', 'amssymb', 'amsfonts', 'mathtools', 'graphicx', 'xcolor', 
     'geometry', 'hyperref', 'array', 'tabularx', 'booktabs', 'cite', 
-    'algorithm', 'algorithmic', 'listings', 'inputenc', 'fontenc', 'babel'
+    'algorithm', 'algorithmic', 'listings', 'inputenc', 'fontenc', 'babel',
+    'ex_test', 'tikz', 'tkz-tab', 'tkz-euclide', 'tkz-fct'
   ]);
 
   requestedPackages.forEach(pkg => {
@@ -264,14 +288,14 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
     </div>`;
   });
 
-  // Handle Theorems, Definitions, Proofs, Lemmas
+  // Handle Theorems, Definitions, Proofs, Lemmas (Classic AMS-LaTeX print styling)
   const academicEnvs = [
-    { name: 'theorem', title: 'Định lý', border: 'border-l-4 border-indigo-600 bg-indigo-50/30' },
-    { name: 'lemma', title: 'Bổ đề', border: 'border-l-4 border-sky-600 bg-sky-50/30' },
-    { name: 'definition', title: 'Định nghĩa', border: 'border-l-4 border-emerald-600 bg-emerald-50/30' },
-    { name: 'proof', title: 'Chứng minh', border: 'border-l-2 border-neutral-400 bg-neutral-50/40' },
-    { name: 'example', title: 'Ví dụ', border: 'border-l-4 border-amber-600 bg-amber-50/30' },
-    { name: 'corollary', title: 'Hệ quả', border: 'border-l-4 border-purple-600 bg-purple-50/30' },
+    { name: 'theorem', title: 'Định lý' },
+    { name: 'lemma', title: 'Bổ đề' },
+    { name: 'definition', title: 'Định nghĩa' },
+    { name: 'proof', title: 'Chứng minh' },
+    { name: 'example', title: 'Ví dụ' },
+    { name: 'corollary', title: 'Hệ quả' },
   ];
 
   academicEnvs.forEach(env => {
@@ -279,15 +303,58 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
     processed = processed.replace(reg, (_, optTitle, content) => {
       const heading = optTitle ? `${env.title} (${optTitle})` : env.title;
       const isProof = env.name === 'proof';
-      return `<div class="my-5 p-4 rounded-r-md ${env.border} text-neutral-800 leading-relaxed text-sm">
-        <div class="font-bold text-neutral-900 mb-1.5 flex items-center justify-between">
-          <span>${heading}</span>
-          ${isProof ? `<span class="text-xs text-neutral-500 font-normal">Q.E.D. ■</span>` : ''}
-        </div>
-        <div class="${isProof ? 'text-neutral-800' : 'italic'}">${content.trim()}</div>
+      return `<div class="my-3 text-justify leading-relaxed text-[14px]">
+        <span class="font-bold text-neutral-950 font-serif">${heading}. </span>
+        <span class="${isProof ? 'text-neutral-900' : 'italic text-neutral-900'}">${content.trim()}</span>
+        ${isProof ? `<span class="float-right text-xs text-neutral-700 font-normal">■</span>` : ''}
       </div>`;
     });
   });
+
+  // Handle ex_test.sty Vietnamese exam environments (True LaTeX printout format)
+  let exNumber = 1;
+  let btNumber = 1;
+  let vdNumber = 1;
+
+  processed = processed.replace(/\\begin\{ex\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{ex\}/g, (_, optTag, content) => {
+    exCount++;
+    const num = exNumber++;
+    const tagHtml = optTag ? ` <span class="font-bold text-neutral-800">[${optTag.trim()}]</span>` : '';
+    return `<div class="latex-exam-item my-3.5 text-justify leading-relaxed text-[14px]">
+      <span class="font-bold text-neutral-950 font-serif">Câu ${num}.${tagHtml}</span>
+      <span class="ml-1 text-neutral-900">${content.trim()}</span>
+    </div>`;
+  });
+
+  processed = processed.replace(/\\begin\{bt\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{bt\}/g, (_, optTag, content) => {
+    exCount++;
+    const num = btNumber++;
+    const tagHtml = optTag ? ` <span class="font-bold text-neutral-800">[${optTag.trim()}]</span>` : '';
+    return `<div class="latex-exam-item my-3.5 text-justify leading-relaxed text-[14px]">
+      <span class="font-bold text-neutral-950 font-serif">Bài ${num}.${tagHtml}</span>
+      <span class="ml-1 text-neutral-900">${content.trim()}</span>
+    </div>`;
+  });
+
+  processed = processed.replace(/\\begin\{vd\}(?:\[([^\]]*)\])?([\s\S]*?)\\end\{vd\}/g, (_, optTag, content) => {
+    exCount++;
+    const num = vdNumber++;
+    const tagHtml = optTag ? ` <span class="font-bold text-neutral-800">[${optTag.trim()}]</span>` : '';
+    return `<div class="latex-exam-item my-3.5 text-justify leading-relaxed text-[14px]">
+      <span class="font-bold text-neutral-950 font-serif">Ví dụ ${num}.${tagHtml}</span>
+      <span class="ml-1 text-neutral-900">${content.trim()}</span>
+    </div>`;
+  });
+
+  // Handle ex_test commands: \choice, \choiceTF, \loigiai, \shortans
+  processed = processExTestCommands(processed);
+
+  // Handle miscellaneous exam commands: \tieude, \point, \dapso, \huongdan
+  processed = processed
+    .replace(/\\tieude\{([^}]+)\}/g, '<div class="text-center font-bold text-lg text-neutral-900 my-4 uppercase tracking-wide latex-font-serif">$1</div>')
+    .replace(/\\point\{([^}]+)\}/g, '<span class="inline-block text-xs font-semibold text-neutral-600 italic select-none">($1 điểm)</span>')
+    .replace(/\\dapso\{([^}]+)\}/g, '<div class="my-2 p-2 bg-neutral-100 rounded text-xs font-semibold text-neutral-800 inline-block border border-neutral-300"><strong>Đáp số:</strong> $1</div>')
+    .replace(/\\huongdan\{([^}]+)\}/g, '<div class="my-2 p-2 bg-sky-50 rounded text-xs text-sky-900 border border-sky-200"><strong>Hướng dẫn:</strong> $1</div>');
 
   // Handle Code blocks / Verbatim / lstlisting
   processed = processed.replace(/\\begin\{(?:verbatim|lstlisting)\}([\s\S]*?)\\end\{(?:verbatim|lstlisting)\}/g, (_, code) => {
@@ -338,6 +405,23 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
   processed = processed.replace(/\\begin\{tikzpicture\}(?:\[[^\]]*\])?([\s\S]*?)\\end\{tikzpicture\}/g, (match) => {
     tikzCount++;
     return renderTikzToHtml(match);
+  });
+
+  // Handle Center, Flushleft, Flushright environments & \centering
+  processed = processed.replace(/\\begin\{center\}([\s\S]*?)\\end\{center\}/g, (_, content) => {
+    return `<div class="my-4 text-center flex flex-col items-center justify-center w-full">${content.trim()}</div>`;
+  });
+
+  processed = processed.replace(/\\begin\{flushleft\}([\s\S]*?)\\end\{flushleft\}/g, (_, content) => {
+    return `<div class="my-3 text-left w-full">${content.trim()}</div>`;
+  });
+
+  processed = processed.replace(/\\begin\{flushright\}([\s\S]*?)\\end\{flushright\}/g, (_, content) => {
+    return `<div class="my-3 text-right w-full">${content.trim()}</div>`;
+  });
+
+  processed = processed.replace(/\{\\centering\s+([\s\S]*?)\}/g, (_, content) => {
+    return `<div class="my-3 text-center flex flex-col items-center justify-center w-full">${content.trim()}</div>`;
   });
 
   // Handle Figures
@@ -444,13 +528,19 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
     .replace(/\\textbf\{([^}]+)\}/g, '<strong>$1</strong>')
     .replace(/\\textit\{([^}]+)\}/g, '<em>$1</em>')
     .replace(/\\emph\{([^}]+)\}/g, '<em>$1</em>')
+    .replace(/\{\\bf\s+([^}]+)\}/g, '<strong>$1</strong>')
+    .replace(/\{\\it\s+([^}]+)\}/g, '<em>$1</em>')
+    .replace(/\{\\rm\s+([^}]+)\}/g, '$1')
+    .replace(/\{\\sc\s+([^}]+)\}/g, '<span class="uppercase tracking-wider text-xs">$1</span>')
+    .replace(/---/g, '—')
+    .replace(/--/g, '–')
     .replace(/\\underline\{([^}]+)\}/g, '<span class="underline underline-offset-2">$1</span>')
     .replace(/\\texttt\{([^}]+)\}/g, '<code class="px-1 py-0.5 rounded bg-neutral-100 font-mono text-xs text-neutral-800 border border-neutral-200">$1</code>')
     .replace(/\\textsc\{([^}]+)\}/g, '<span class="uppercase tracking-wider text-xs">$1</span>')
     .replace(/\\url\{([^}]+)\}/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline font-mono text-xs">$1</a>')
     .replace(/\\href\{([^}]+)\}\{([^}]+)\}/g, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">$2</a>')
     .replace(/\\hrule/g, '<hr class="my-6 border-neutral-200" />')
-    .replace(/\\newpage|\\clearpage/g, '<div class="my-8 py-3 border-b-2 border-dashed border-neutral-300 text-center text-xs text-neutral-400 select-none font-mono">── Hết trang (New Page) ──</div>');
+    .replace(/\\newpage|\\clearpage/g, '###PAGE_BREAK###');
 
   // Handle Inline Math: $...$ or \( ... \)
   // Replace inline math safely
@@ -541,11 +631,56 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
     </footer>`;
   }
 
+  // Partition document into discrete physical A4 pages
+  let pages: string[] = [];
+  if (parsedHtml.includes('###PAGE_BREAK###')) {
+    pages = parsedHtml
+      .split('###PAGE_BREAK###')
+      .map(p => p.trim())
+      .filter(Boolean);
+  } else {
+    // If no explicit page break, check if content has multiple major blocks (e.g. sections or exam items)
+    const rawBlocks = parsedHtml.split(/(?=<div class="latex-exam-item|<div class="latex-exercise|<div class="font-bold text-neutral-950 mt-5|<h2 )/);
+    if (rawBlocks.length > 2) {
+      let currentPageHtml = '';
+      let currentHeightEstimate = 0;
+      for (const block of rawBlocks) {
+        let blockHeight = 60;
+        if (block.includes('<svg') || block.includes('tikzpicture')) blockHeight += 240;
+        if (block.includes('PHẦN') || block.includes('<h2')) blockHeight += 50;
+        if (block.includes('latex-exam-item') || block.includes('latex-exercise')) blockHeight += 120;
+        if (block.includes('grid') && block.includes('font-serif')) blockHeight += 60;
+        if (block.includes('Lời giải')) blockHeight += 90;
+
+        if (currentPageHtml && currentHeightEstimate + blockHeight > 880) {
+          pages.push(currentPageHtml);
+          currentPageHtml = block;
+          currentHeightEstimate = blockHeight;
+        } else {
+          currentPageHtml += block;
+          currentHeightEstimate += blockHeight;
+        }
+      }
+      if (currentPageHtml.trim()) {
+        pages.push(currentPageHtml);
+      }
+    } else {
+      pages = [parsedHtml];
+    }
+  }
+
+  if (pages.length === 0) {
+    pages = [parsedHtml || '<p class="text-neutral-400 italic">Tài liệu chưa có nội dung.</p>'];
+  }
+
+  // Remove markers for continuous HTML view
+  parsedHtml = parsedHtml.replace(/###PAGE_BREAK###/g, '<div class="my-6 border-b border-dashed border-neutral-300"></div>');
+
   // Calculate Metrics
   const textContent = bodyContent.replace(/\\([a-zA-Z]+|\S)/g, ' ').replace(/\s+/g, ' ');
   const words = textContent.trim().split(/\s+/).filter(Boolean).length;
   const chars = latexCode.length;
-  const estimatedPages = Math.max(1, Math.ceil(words / 450));
+  const estimatedPages = pages.length;
   const compileTimeMs = Math.round(performance.now() - startTime);
 
   // Determine overall status
@@ -561,6 +696,14 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
     });
   }
 
+  if (exCount > 0) {
+    logs.push({
+      id: 'ex-rendered',
+      type: 'info',
+      message: `Đã xử lý ${exCount} câu hỏi / bài tập định dạng chuẩn gói ex_test.sty.`,
+    });
+  }
+
   if (logs.length === 0) {
     logs.push({
       id: 'compile-success',
@@ -572,6 +715,7 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
 
   return {
     html: parsedHtml,
+    pages,
     status,
     logs,
     metrics: {
@@ -583,6 +727,7 @@ export function compileLaTeX(latexCode: string, styleFiles: StyleFile[] = []): C
       sectionCount,
       activePackagesCount: activeStyleFiles.length,
       tikzCount,
+      exCount,
     },
     metadata,
   };
@@ -717,4 +862,152 @@ function renderInlineMath(text: string, macros: Record<string, string>, logs: Co
   return text.replace(/(?<!\\)\$((?:\\\$|[^$])+?)\$/g, (_, math) => {
     return renderKatexInline(math, macros, logs);
   });
+}
+
+/**
+ * Intelligent balanced curly brace argument parser for LaTeX commands
+ */
+function parseBracedArgs(str: string, startIndex: number, count: number): { args: string[]; endIndex: number } | null {
+  const args: string[] = [];
+  let i = startIndex;
+  while (i < str.length && args.length < count) {
+    // skip whitespace & comments
+    while (i < str.length && /\s/.test(str[i])) i++;
+    if (i >= str.length || str[i] !== '{') break;
+    i++; // skip opening '{'
+    let depth = 1;
+    const startArg = i;
+    while (i < str.length && depth > 0) {
+      if (str[i] === '\\' && i + 1 < str.length) {
+        i += 2; // skip escaped char like \{ or \}
+        continue;
+      }
+      if (str[i] === '{') depth++;
+      else if (str[i] === '}') depth--;
+      if (depth === 0) break;
+      i++;
+    }
+    if (depth === 0) {
+      args.push(str.slice(startArg, i));
+      i++; // skip closing '}'
+    } else {
+      break;
+    }
+  }
+  if (args.length === count) {
+    return { args, endIndex: i };
+  }
+  return null;
+}
+
+/**
+ * Parses Vietnamese exam commands from ex_test.sty:
+ * \choice, \choiceTF, \loigiai, \shortans, \tieude, \point, \dapso, \huongdan
+ */
+function processExTestCommands(text: string): string {
+  let result = '';
+  let i = 0;
+  while (i < text.length) {
+    // 1. Check for \choice[cols]{A}{B}{C}{D} or \choice{A}{B}{C}{D}
+    const choiceMatch = text.slice(i).match(/^\\choice(?:\[(\d+)\])?/);
+    if (choiceMatch) {
+      const matchLength = choiceMatch[0].length;
+      const cols = choiceMatch[1] ? parseInt(choiceMatch[1], 10) : 4;
+      const parsedArgs = parseBracedArgs(text, i + matchLength, 4);
+      if (parsedArgs) {
+        const letters = ['A', 'B', 'C', 'D'];
+        const colClass = cols === 1 
+          ? 'grid-cols-1' 
+          : cols === 2 
+            ? 'grid-cols-1 sm:grid-cols-2' 
+            : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-4';
+
+        const optionsHtml = parsedArgs.args.map((rawOpt, idx) => {
+          const letter = letters[idx];
+          const isCorrect = rawOpt.includes('\\True');
+          const cleanOpt = rawOpt
+            .replace(/\\True(?:\{\})?/g, '')
+            .replace(/\{\\True\}/g, '')
+            .replace(/\\False(?:\{\})?/g, '')
+            .replace(/\{\\False\}/g, '')
+            .trim();
+
+          return `<div class="flex items-baseline gap-1.5 text-[14px]">
+            <span class="font-bold font-serif text-neutral-950 shrink-0">${letter}.</span>
+            <div class="overflow-x-auto">${cleanOpt}</div>
+          </div>`;
+        }).join('');
+
+        result += `<div class="grid ${colClass} gap-x-6 gap-y-1.5 my-2.5 ml-4 font-serif">${optionsHtml}</div>`;
+        i = parsedArgs.endIndex;
+        continue;
+      }
+    }
+
+    // 2. Check for \choiceTF{a}{b}{c}{d} (Đúng / Sai format)
+    const choiceTFMatch = text.slice(i).match(/^\\choiceTF/);
+    if (choiceTFMatch) {
+      const matchLength = choiceTFMatch[0].length;
+      const parsedArgs = parseBracedArgs(text, i + matchLength, 4);
+      if (parsedArgs) {
+        const letters = ['a', 'b', 'c', 'd'];
+        const optionsHtml = parsedArgs.args.map((rawOpt, idx) => {
+          const letter = letters[idx];
+          const isCorrect = rawOpt.includes('\\True');
+          const isFalse = rawOpt.includes('\\False');
+          const cleanOpt = rawOpt
+            .replace(/\\True(?:\{\})?/g, '')
+            .replace(/\{\\True\}/g, '')
+            .replace(/\\False(?:\{\})?/g, '')
+            .replace(/\{\\False\}/g, '')
+            .trim();
+
+          return `<div class="flex items-baseline justify-between gap-3 text-[14px] leading-relaxed">
+            <div class="flex items-baseline gap-2">
+              <span class="font-bold font-serif text-neutral-950">${letter})</span>
+              <span>${cleanOpt}</span>
+            </div>
+            <div class="text-xs text-neutral-500 font-serif italic shrink-0 select-none">[Đ / S]</div>
+          </div>`;
+        }).join('');
+
+        result += `<div class="space-y-1.5 my-2.5 ml-4 font-serif">${optionsHtml}</div>`;
+        i = parsedArgs.endIndex;
+        continue;
+      }
+    }
+
+    // 3. Check for \loigiai{...} (Solution explanation)
+    const loigiaiMatch = text.slice(i).match(/^\\loigiai/);
+    if (loigiaiMatch) {
+      const parsedArgs = parseBracedArgs(text, i + loigiaiMatch[0].length, 1);
+      if (parsedArgs) {
+        const solutionText = parsedArgs.args[0].trim();
+        result += `<div class="my-2.5 pl-3 border-l-2 border-neutral-400 text-neutral-800 text-[13.5px] leading-relaxed font-serif">
+          <span class="italic font-bold text-neutral-900 not-italic">Lời giải. </span>
+          <span>${solutionText}</span>
+        </div>`;
+        i = parsedArgs.endIndex;
+        continue;
+      }
+    }
+
+    // 4. Check for \shortans{...}
+    const shortansMatch = text.slice(i).match(/^\\shortans/);
+    if (shortansMatch) {
+      const parsedArgs = parseBracedArgs(text, i + shortansMatch[0].length, 1);
+      if (parsedArgs) {
+        result += `<div class="my-2 font-serif text-[13.5px]">
+          <span class="font-bold italic text-neutral-900">Trả lời ngắn: </span>
+          <span class="font-serif text-neutral-950 font-medium">${parsedArgs.args[0].trim()}</span>
+        </div>`;
+        i = parsedArgs.endIndex;
+        continue;
+      }
+    }
+
+    result += text[i];
+    i++;
+  }
+  return result;
 }

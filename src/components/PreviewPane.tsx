@@ -4,11 +4,11 @@ import {
   ZoomOut, 
   RotateCcw, 
   Printer, 
+  FileDown,
   Sun, 
   Moon, 
   Copy, 
   Check, 
-  Maximize2,
   FileCheck
 } from 'lucide-react';
 import { CompilerResult } from '../utils/latexCompiler';
@@ -17,12 +17,16 @@ interface PreviewPaneProps {
   compilerResult: CompilerResult | null;
   isCompiling: boolean;
   onExportPdf: () => void;
+  onSystemPrint?: () => void;
+  isExportingPdf?: boolean;
 }
 
 export const PreviewPane: React.FC<PreviewPaneProps> = ({
   compilerResult,
   isCompiling,
   onExportPdf,
+  onSystemPrint,
+  isExportingPdf,
 }) => {
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [paperTheme, setPaperTheme] = useState<'light' | 'dark'>('light');
@@ -77,14 +81,33 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({
             {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           </button>
 
-          {/* Print / PDF */}
+          {/* Direct PDF Download */}
           <button
             onClick={onExportPdf}
-            className="p-1.5 text-neutral-400 hover:text-white rounded hover:bg-neutral-800 transition-colors"
-            title="In hoặc xuất PDF"
+            disabled={isExportingPdf}
+            className="flex items-center gap-1 px-2 py-1 text-emerald-400 hover:text-white rounded hover:bg-emerald-950/80 border border-emerald-900/60 transition-colors disabled:opacity-50"
+            title="Tải ngay file PDF (.pdf) chuẩn A4 chất lượng cao"
           >
-            <Printer className="w-3.5 h-3.5" />
+            {isExportingPdf ? (
+              <div className="w-3.5 h-3.5 border-2 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileDown className="w-3.5 h-3.5" />
+            )}
+            <span className="text-[11px] font-medium hidden sm:inline">
+              {isExportingPdf ? 'Đang tạo...' : 'Tải PDF'}
+            </span>
           </button>
+
+          {/* System Print */}
+          {onSystemPrint && (
+            <button
+              onClick={onSystemPrint}
+              className="p-1.5 text-neutral-400 hover:text-white rounded hover:bg-neutral-800 transition-colors"
+              title="Mở hộp thoại in hệ thống (Print dialog)"
+            >
+              <Printer className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           <div className="h-3 w-px bg-neutral-800 mx-1" />
 

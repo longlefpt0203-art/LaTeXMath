@@ -105,6 +105,49 @@ function generateSnippet(cmdName: string, argsCount: number): string {
  */
 export const SAMPLE_STY_PACKAGES: StyleFile[] = [
   {
+    id: 'sty-ex-test',
+    name: 'ex_test.sty',
+    enabled: true,
+    updatedAt: Date.now(),
+    content: `% Gói thư viện soạn thảo đề thi Toán chuẩn Việt Nam ex_test.sty
+\\ProvidesPackage{ex_test}
+
+% 1. Định dạng đáp án đúng / sai trong trắc nghiệm
+\\newcommand{\\True}{\\mathbf{\\checkmark}}
+\\newcommand{\\False}{\\mathbf{\\times}}
+
+% 2. Hệ phương trình & Tuyển phương trình
+\\newcommand{\\heva}[1]{\\left\\{\\begin{aligned}#1\\end{aligned}\\right\\}}
+\\newcommand{\\hoac}[1]{\\left[\\begin{aligned}#1\\end{aligned}\\right\\}}
+
+% 3. Ký hiệu vector và hình học
+\\newcommand{\\vect}[1]{\\vec{#1}}
+\\newcommand{\\degree}{^\\circ}
+\\newcommand{\\parallel}{\\mathrel{/\\!/}}
+\\newcommand{\\perp}{\\bot}
+
+% 4. Vi phân tích phân & giải tích
+\\newcommand{\\dx}{\\,\\mathrm{d}x}
+\\newcommand{\\dt}{\\,\\mathrm{d}t}
+\\newcommand{\\du}{\\,\\mathrm{d}u}
+
+% 5. Lệnh điểm số & tiêu đề
+\\newcommand{\\point}[1]{\\textbf{(#1 điểm)}}
+\\newcommand{\\dapso}[1]{\\textbf{Đáp số: }#1}
+`,
+    macros: [
+      { name: '\\True', argsCount: 0, definition: '\\mathbf{\\checkmark}', snippet: '\\True ', source: 'ex_test.sty' },
+      { name: '\\False', argsCount: 0, definition: '\\mathbf{\\times}', snippet: '\\False ', source: 'ex_test.sty' },
+      { name: '\\heva', argsCount: 1, definition: '\\left\\{\\begin{aligned}#1\\end{aligned}\\right\\}', snippet: '\\heva{x + y = 1 \\\\ x - y = 0}', source: 'ex_test.sty' },
+      { name: '\\hoac', argsCount: 1, definition: '\\left[\\begin{aligned}#1\\end{aligned}\\right\\}', snippet: '\\hoac{x = 1 \\\\ x = -1}', source: 'ex_test.sty' },
+      { name: '\\vect', argsCount: 1, definition: '\\vec{#1}', snippet: '\\vect{AB}', source: 'ex_test.sty' },
+      { name: '\\degree', argsCount: 0, definition: '^\\circ', snippet: '^\\degree', source: 'ex_test.sty' },
+      { name: '\\dx', argsCount: 0, definition: '\\,\\mathrm{d}x', snippet: '\\dx', source: 'ex_test.sty' },
+      { name: '\\point', argsCount: 1, definition: '\\textbf{(#1 điểm)}', snippet: '\\point{1.0}', source: 'ex_test.sty' },
+      { name: '\\dapso', argsCount: 1, definition: '\\textbf{Đáp số: }#1', snippet: '\\dapso{S = 4}', source: 'ex_test.sty' },
+    ],
+  },
+  {
     id: 'sty-standard-math',
     name: 'math_shortcuts.sty',
     enabled: true,
