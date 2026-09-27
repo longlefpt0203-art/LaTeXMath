@@ -8,20 +8,34 @@ interface Point2D {
   y: number;
 }
 
+const tikzHtmlCache = new Map<string, string>();
+
 export function renderTikzToHtml(tikzBlock: string): string {
+  const cached = tikzHtmlCache.get(tikzBlock);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   try {
     const rawContent = tikzBlock
       .replace(/\\begin\{tikzpicture\}(?:\[[^\]]*\])?/g, '')
       .replace(/\\end\{tikzpicture\}/g, '')
       .trim();
 
+    let resultHtml = '';
     // Check if this is a tkz-tab variation table
     if (rawContent.includes('\\tkzTabInit')) {
-      return renderTkzTab(rawContent);
+      resultHtml = renderTkzTab(rawContent);
+    } else {
+      // Otherwise, parse geometry and render SVG
+      resultHtml = renderTikzSvg(rawContent);
     }
 
-    // Otherwise, parse geometry and render SVG
-    return renderTikzSvg(rawContent);
+    if (tikzHtmlCache.size > 200) {
+      tikzHtmlCache.clear();
+    }
+    tikzHtmlCache.set(tikzBlock, resultHtml);
+    return resultHtml;
   } catch (err: unknown) {
     const errMessage = err instanceof Error ? err.message : String(err);
     return `<div class="my-4 p-4 rounded-lg bg-neutral-100 border border-neutral-300 text-neutral-800 text-xs">
