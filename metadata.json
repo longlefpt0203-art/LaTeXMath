@@ -1,0 +1,8 @@
+{
+  "name": "LaTeX Studio Pro - Trình biên dịch LaTeX cá nhân",
+  "description": "Nền tảng soạn thảo và biên dịch tài liệu, công thức toán học LaTeX trực quan với xem trước thời gian thực, quản lý dự án và xuất PDF chuẩn học thuật.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
